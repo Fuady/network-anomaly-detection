@@ -1,0 +1,104 @@
+# ─────────────────────────────────────────────────────────────
+# configs/config.yaml — Main project configuration
+# ─────────────────────────────────────────────────────────────
+
+project:
+  name: "network-anomaly-detection"
+  version: "1.0.0"
+  description: "Real-time network anomaly detection and proactive marketing"
+
+paths:
+  raw_data:       "data/raw"
+  processed_data: "data/processed"
+  external_data:  "data/external"
+  models:         "data/models"
+  logs:           "logs"
+
+data_generation:
+  n_sites:        200          # number of cell sites to simulate
+  days:           90           # days of history to generate
+  interval_min:   5            # KPI sampling interval in minutes
+  random_seed:    42
+  # Jakarta metropolitan area bounding box
+  geo_bounds:
+    lat_min: -6.50
+    lat_max: -5.90
+    lon_min: 106.60
+    lon_max: 107.10
+  h3_resolution:  8            # ~0.74 km² hex cells
+  # Anomaly injection rates
+  anomaly_rates:
+    outage:       0.005        # full outage events
+    congestion:   0.015        # high-load congestion
+    interference: 0.010        # RF interference
+    hardware:     0.008        # hardware degradation
+
+kpi_columns:
+  - rsrq_avg          # Reference Signal Received Quality (dB): Good > -10, Poor < -15
+  - rsrp_avg          # Reference Signal Received Power (dBm): Good > -80, Poor < -110
+  - throughput_mbps   # Average downlink throughput
+  - latency_ms        # Round-trip latency
+  - packet_loss_pct   # Packet loss percentage
+  - connected_users   # Active user count
+  - prb_utilization   # Physical Resource Block utilisation (0-1)
+  - sinr_avg          # Signal-to-Interference-plus-Noise Ratio (dB)
+
+features:
+  # Rolling window sizes in minutes
+  windows_min: [5, 15, 30, 60]
+  # Lag features
+  lag_periods: [1, 3, 6, 12]   # in intervals (×5 min)
+
+anomaly_detection:
+  # Score threshold for flagging anomaly (0-1)
+  threshold:          0.65
+  # Minimum consecutive anomaly windows before raising alert
+  min_consecutive:    3
+  # Ensemble weights for final score
+  ensemble_weights:
+    prophet:          0.30
+    isolation_forest: 0.35
+    lstm_autoencoder: 0.35
+
+geo_impact:
+  # H3 resolution for anomaly zone map
+  resolution:         8
+  # Minimum sites per H3 cell to compute zone anomaly score
+  min_sites_per_cell: 1
+  # Alert if zone anomaly score exceeds this
+  zone_alert_threshold: 0.55
+
+marketing:
+  # Minimum subscriber impact duration before sending offer (minutes)
+  min_impact_minutes: 15
+  # Offer tiers by severity
+  offers:
+    mild:     {threshold: 0.20, offer_id: "data_1gb",  message: "1GB bonus data"}
+    moderate: {threshold: 0.40, offer_id: "data_5gb",  message: "5GB bonus data + apology"}
+    severe:   {threshold: 0.65, offer_id: "day_pass",  message: "Free day pass"}
+    critical: {threshold: 0.85, offer_id: "week_free", message: "1 week free service"}
+
+mlflow:
+  tracking_uri:          "http://localhost:5000"
+  experiment_name:       "network_anomaly_detection"
+  registered_model_name: "network_anomaly_ensemble"
+
+kafka:
+  bootstrap_servers:  "localhost:9092"
+  kpi_topic:          "network-kpis"
+  alert_topic:        "anomaly-alerts"
+  marketing_topic:    "marketing-triggers"
+  group_id:           "anomaly-detector"
+  batch_size:         100
+  poll_timeout_ms:    1000
+
+api:
+  host: "0.0.0.0"
+  port: 8000
+
+monitoring:
+  prometheus_port:    8001
+  # PSI drift threshold — retrain if anomaly score distribution shifts
+  drift_psi_threshold: 0.20
+  # Alert if false positive rate exceeds this
+  max_false_positive_rate: 0.10

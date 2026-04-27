@@ -1,0 +1,86 @@
+# ─────────────────────────────────────────────────────────────
+# configs/alert_rules.yaml — Marketing trigger rules
+# ─────────────────────────────────────────────────────────────
+
+# KPI-specific degradation thresholds (absolute values)
+kpi_thresholds:
+  rsrq_avg:
+    warning:  -14.0    # dB — noticeable quality drop
+    critical: -17.0    # dB — severe quality
+  rsrp_avg:
+    warning:  -105.0   # dBm
+    critical: -115.0   # dBm
+  throughput_mbps:
+    warning:   5.0     # Mbps — minimum acceptable
+    critical:  2.0     # Mbps — unusable
+  latency_ms:
+    warning:   80.0    # ms
+    critical:  150.0   # ms — severely degraded
+  packet_loss_pct:
+    warning:   2.0     # %
+    critical:  5.0     # %
+
+# Anomaly score → severity tier
+severity_tiers:
+  mild:
+    min_score:       0.20
+    max_score:       0.40
+    min_duration_min: 15
+    offer_id:        "data_1gb"
+    offer_name:      "1GB Data Bonus"
+    message_template: >
+      Dear {name}, we noticed a brief network issue in your area.
+      We've added 1GB bonus data to your account as a thank you for your patience.
+    channel:         "push"
+
+  moderate:
+    min_score:       0.40
+    max_score:       0.65
+    min_duration_min: 30
+    offer_id:        "data_5gb"
+    offer_name:      "5GB Data Bonus + Service Credit"
+    message_template: >
+      Dear {name}, we experienced network issues in your area for approximately
+      {duration} minutes. We've added 5GB bonus data and a $3 service credit.
+    channel:         "sms"
+
+  severe:
+    min_score:       0.65
+    max_score:       0.85
+    min_duration_min: 60
+    offer_id:        "day_pass"
+    offer_name:      "Free Day Pass"
+    message_template: >
+      Dear {name}, we sincerely apologise for the service disruption in your area.
+      A complimentary 24-hour unlimited data pass has been added to your account.
+    channel:         "sms"
+
+  critical:
+    min_score:       0.85
+    max_score:       1.00
+    min_duration_min: 0
+    offer_id:        "week_free"
+    offer_name:      "1 Week Free Service"
+    message_template: >
+      Dear {name}, we are deeply sorry for the extended service outage affecting
+      your area. Your next 7 days of service are complimentary.
+    channel:         "call"
+
+# Subscriber priority scoring weights
+subscriber_priority:
+  arpu_weight:           0.40   # Monthly charges
+  tenure_weight:         0.25   # Loyalty
+  usage_impact_weight:   0.35   # Data used during degradation window
+
+# Rate limiting — max offers per subscriber
+rate_limit:
+  max_offers_per_day:    1
+  max_offers_per_week:   3
+  cooldown_hours:        24
+
+# Geographic aggregation for alerts
+geo_settings:
+  # Aggregate multiple nearby sites into one zone alert
+  h3_resolution:         7      # ~5.2 km² — neighbourhood level
+  min_affected_sites:    2      # at least 2 sites to raise zone alert
+  max_affected_radius_km: 5.0

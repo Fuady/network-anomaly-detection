@@ -1,0 +1,64 @@
+# ─────────────────────────────────────────────────────────────
+# configs/anomaly_params.yaml — Model hyperparameters
+# ─────────────────────────────────────────────────────────────
+
+prophet:
+  # Seasonality
+  daily_seasonality:   true
+  weekly_seasonality:  true
+  yearly_seasonality:  false
+  seasonality_mode:    "multiplicative"
+  # Prediction interval width — points outside this = anomaly
+  interval_width:      0.95
+  # Changepoint sensitivity
+  changepoint_prior_scale:    0.05
+  seasonality_prior_scale:    10.0
+  # Training window (days of history to use per model)
+  training_days:       60
+  # Refit interval (retrain every N new readings)
+  refit_every_n:       288    # once per day at 5-min intervals
+
+isolation_forest:
+  n_estimators:        200
+  contamination:       0.05   # expected anomaly rate ≈ 5%
+  max_samples:         "auto"
+  random_state:        42
+  n_jobs:              -1
+  # Features to use (subset of engineered features)
+  feature_set:
+    - rsrq_avg
+    - rsrp_avg
+    - throughput_mbps
+    - latency_ms
+    - packet_loss_pct
+    - rsrq_rolling_mean_30
+    - rsrq_rolling_std_30
+    - throughput_rolling_mean_30
+    - latency_rolling_mean_30
+    - rsrq_rate_of_change
+    - throughput_rate_of_change
+
+lstm_autoencoder:
+  # Architecture
+  input_features: 8
+  sequence_length: 12        # 60 minutes at 5-min intervals
+  hidden_size:     64
+  num_layers:      2
+  dropout:         0.2
+  # Training
+  epochs:          50
+  batch_size:      64
+  learning_rate:   0.001
+  patience:        10        # early stopping patience
+  train_ratio:     0.85
+  # Anomaly threshold: percentile of reconstruction errors on training set
+  threshold_percentile: 95
+  random_seed:     42
+  device:          "cpu"     # cpu | cuda | mps
+
+# Optuna hyperparameter search for Isolation Forest
+optuna:
+  n_trials:        30
+  timeout_seconds: 600
+  direction:       "minimize"
+  metric:          "false_positive_rate"
