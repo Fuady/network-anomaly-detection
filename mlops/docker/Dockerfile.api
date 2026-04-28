@@ -1,0 +1,13 @@
+FROM python:3.10-slim
+WORKDIR /app
+RUN apt-get update && apt-get install -y gcc libgdal-dev gdal-bin curl && rm -rf /var/lib/apt/lists/*
+RUN pip install --no-cache-dir numpy pandas geopandas shapely h3 scikit-learn \
+    joblib pyyaml loguru python-dotenv pyarrow fastapi uvicorn pydantic \
+    prometheus-client mlflow
+COPY src/ ./src/
+COPY configs/ ./configs/
+COPY setup.py .
+RUN pip install -e . --no-deps --quiet
+EXPOSE 8000 8001
+HEALTHCHECK --interval=30s CMD curl -f http://localhost:8000/health || exit 1
+CMD ["uvicorn", "src.api.app:app", "--host", "0.0.0.0", "--port", "8000"]

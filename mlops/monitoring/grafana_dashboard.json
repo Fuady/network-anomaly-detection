@@ -1,0 +1,64 @@
+{
+  "title": "Network Anomaly Detection Dashboard",
+  "uid": "network-anomaly",
+  "version": 1,
+  "panels": [
+    {
+      "title": "Anomalies Detected (Total)",
+      "type": "stat",
+      "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4},
+      "targets": [{"expr": "sum(anomalies_detected_total)", "legendFormat": "Total"}],
+      "options": {"colorMode": "background", "graphMode": "area"}
+    },
+    {
+      "title": "Active Anomaly Zones",
+      "type": "stat",
+      "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4},
+      "targets": [{"expr": "active_anomaly_zones", "legendFormat": "Zones"}],
+      "options": {"colorMode": "background"}
+    },
+    {
+      "title": "Marketing Triggers Fired",
+      "type": "stat",
+      "gridPos": {"x": 12, "y": 0, "w": 6, "h": 4},
+      "targets": [{"expr": "sum(marketing_triggers_total)", "legendFormat": "Triggers"}],
+      "options": {"colorMode": "background"}
+    },
+    {
+      "title": "API Request Latency (p99)",
+      "type": "stat",
+      "gridPos": {"x": 18, "y": 0, "w": 6, "h": 4},
+      "targets": [{"expr": "histogram_quantile(0.99, rate(api_request_seconds_bucket[5m]))", "legendFormat": "p99"}],
+      "options": {"colorMode": "background"}
+    },
+    {
+      "title": "Anomalies Over Time by Severity",
+      "type": "timeseries",
+      "gridPos": {"x": 0, "y": 4, "w": 24, "h": 8},
+      "targets": [
+        {"expr": "rate(anomalies_detected_total{severity='critical'}[5m])", "legendFormat": "Critical"},
+        {"expr": "rate(anomalies_detected_total{severity='severe'}[5m])",   "legendFormat": "Severe"},
+        {"expr": "rate(anomalies_detected_total{severity='moderate'}[5m])", "legendFormat": "Moderate"},
+        {"expr": "rate(anomalies_detected_total{severity='mild'}[5m])",     "legendFormat": "Mild"}
+      ]
+    },
+    {
+      "title": "Marketing Triggers by Tier",
+      "type": "piechart",
+      "gridPos": {"x": 0, "y": 12, "w": 12, "h": 8},
+      "targets": [
+        {"expr": "marketing_triggers_total", "legendFormat": "{{tier}}"}
+      ]
+    },
+    {
+      "title": "API Request Rate",
+      "type": "timeseries",
+      "gridPos": {"x": 12, "y": 12, "w": 12, "h": 8},
+      "targets": [
+        {"expr": "rate(api_request_seconds_count[5m])", "legendFormat": "{{endpoint}}"}
+      ]
+    }
+  ],
+  "time": {"from": "now-6h", "to": "now"},
+  "refresh": "30s"
+}

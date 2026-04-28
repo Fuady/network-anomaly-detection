@@ -1,0 +1,12 @@
+FROM python:3.10-slim
+WORKDIR /app
+RUN apt-get update && apt-get install -y gcc libgdal-dev gdal-bin && rm -rf /var/lib/apt/lists/*
+RUN pip install --no-cache-dir numpy pandas geopandas shapely h3 scikit-learn \
+    joblib streamlit plotly folium streamlit-folium pyyaml pyarrow
+COPY src/ ./src/
+COPY configs/ ./configs/
+COPY dashboards/ ./dashboards/
+COPY setup.py .
+RUN pip install -e . --no-deps --quiet
+EXPOSE 8501
+CMD ["streamlit","run","dashboards/streamlit_app.py","--server.port=8501","--server.address=0.0.0.0","--server.headless=true"]
