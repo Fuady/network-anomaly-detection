@@ -435,6 +435,3 @@ MIT License — see [LICENSE](LICENSE) for details.
 
 ---
 
-## 👤 Author
-
-Portfolio project demonstrating real-time ML engineering at the intersection of **network operations**, **geospatial analytics**, and **proactive marketing automation**.
